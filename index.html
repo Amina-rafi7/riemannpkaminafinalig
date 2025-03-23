@@ -5,94 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riemann Integral & Sum Calculator</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-        }
-        .hidden {
-            display: none;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        input, button { margin: 10px; padding: 10px; width: 90%; }
+        .result { font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Riemann Integral & Sum Calculator</h1>
-        <label for="calculationType">Choose Calculation:</label>
-        <select id="calculationType" onchange="toggleForms()">
-            <option value="sum">Riemann Sum</option>
-            <option value="integral">Definite Integral</option>
-        </select>
-        
-        <div id="sumForm">
-            <h2>Riemann Sum</h2>
-            <label for="functionSum">Function f(x):</label>
-            <input type="text" id="functionSum" placeholder="e.g., x*x">
-            <label for="a">Lower Bound (a):</label>
-            <input type="number" id="a" placeholder="0">
-            <label for="b">Upper Bound (b):</label>
-            <input type="number" id="b" placeholder="1">
-            <label for="n">Number of Subintervals (n):</label>
-            <input type="number" id="n" placeholder="10">
-            <button onclick="calculateSum()">Calculate</button>
-            <p id="sumResult"></p>
-        </div>
-        
-        <div id="integralForm" class="hidden">
-            <h2>Definite Integral</h2>
-            <label for="functionIntegral">Function f(x):</label>
-            <input type="text" id="functionIntegral" placeholder="e.g., x*x">
-            <label for="aInt">Lower Bound (a):</label>
-            <input type="number" id="aInt" placeholder="0">
-            <label for="bInt">Upper Bound (b):</label>
-            <input type="number" id="bInt" placeholder="1">
-            <button onclick="calculateIntegral()">Calculate</button>
-            <p id="integralResult"></p>
-        </div>
+        <h2>Riemann Integral & Sum Calculator</h2>
+        <label>Function f(x):</label>
+        <input type="text" id="functionInput" placeholder="Example: x*x">
+        <label>Interval [a, b]:</label>
+        <input type="number" id="a" placeholder="a">
+        <input type="number" id="b" placeholder="b">
+        <label>Number of Subintervals (n):</label>
+        <input type="number" id="n" placeholder="n">
+        <button onclick="calculate()">Calculate</button>
+        <div class="result" id="output"></div>
     </div>
     
     <script>
-        function toggleForms() {
-            const selection = document.getElementById("calculationType").value;
-            document.getElementById("sumForm").classList.toggle("hidden", selection !== "sum");
-            document.getElementById("integralForm").classList.toggle("hidden", selection !== "integral");
+        function f(x, expr) {
+            return new Function('x', `return ${expr};`)(x);
         }
-
-        function calculateSum() {
-            let f = new Function("x", "return " + document.getElementById("functionSum").value);
+        
+        function calculate() {
+            let expr = document.getElementById("functionInput").value;
             let a = parseFloat(document.getElementById("a").value);
             let b = parseFloat(document.getElementById("b").value);
             let n = parseInt(document.getElementById("n").value);
-            let dx = (b - a) / n;
-            let sum = 0;
             
-            for (let i = 0; i < n; i++) {
-                let x = a + i * dx;
-                sum += f(x) * dx;
+            if (isNaN(a) || isNaN(b) || isNaN(n) || n <= 0) {
+                document.getElementById("output").innerHTML = "Please enter valid values for a, b, and n.";
+                return;
             }
             
-            document.getElementById("sumResult").innerText = "Riemann Sum: " + sum.toFixed(5);
-        }
-        
-        function calculateIntegral() {
-            let f = new Function("x", "return " + document.getElementById("functionIntegral").value);
-            let a = parseFloat(document.getElementById("aInt").value);
-            let b = parseFloat(document.getElementById("bInt").value);
-            let n = 10000; // More subintervals for better accuracy
             let dx = (b - a) / n;
-            let integral = 0;
+            let leftSum = 0, rightSum = 0, midSum = 0, trapSum = 0;
             
             for (let i = 0; i < n; i++) {
-                let x = a + i * dx;
-                integral += f(x) * dx;
+                let xLeft = a + i * dx;
+                let xRight = a + (i + 1) * dx;
+                let xMid = (xLeft + xRight) / 2;
+                
+                leftSum += f(xLeft, expr) * dx;
+                rightSum += f(xRight, expr) * dx;
+                midSum += f(xMid, expr) * dx;
+                trapSum += (f(xLeft, expr) + f(xRight, expr)) * dx / 2;
             }
             
-            document.getElementById("integralResult").innerText = "Definite Integral: " + integral.toFixed(5);
+            document.getElementById("output").innerHTML = `
+                Left Riemann Sum: ${leftSum.toFixed(5)} <br>
+                Right Riemann Sum: ${rightSum.toFixed(5)} <br>
+                Midpoint Riemann Sum: ${midSum.toFixed(5)} <br>
+                Trapezoidal Approximation: ${trapSum.toFixed(5)}
+            `;
         }
     </script>
 </body>
 </html>
+
